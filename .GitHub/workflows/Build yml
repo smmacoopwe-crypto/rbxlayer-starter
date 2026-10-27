@@ -3,6 +3,20 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+      clean:
+        description: 'Clean build?'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -25,10 +39,22 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Clean (if selected)
+        if: ${{ inputs.clean == true }}
+        run: gradle clean
+
+      - name: Build APK
+        run: |
+          if [ "${{ inputs.build_type }}" == "release" ]; then
+            gradle assembleRelease --stacktrace
+          else
+            gradle assembleDebug --stacktrace
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: app-${{ inputs.build_type || 'debug' }}
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release*.apk
+          if-no-files-found: ignore
