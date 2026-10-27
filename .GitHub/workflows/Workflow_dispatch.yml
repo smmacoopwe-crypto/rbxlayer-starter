@@ -1,0 +1,13 @@
+on:
+  push:
+  pull_request:
+  workflow_dispatch:  # <-- add this if it's missing
+    inputs:
+      environment:
+        description: 'Env to deploy to'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - prod
